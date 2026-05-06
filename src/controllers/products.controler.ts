@@ -7,7 +7,7 @@ import { isNullOrUndefined } from "../utils/utils.ts";
 import { ApiError } from "../lib/errors.ts";
 
 export const getProductsByCategorySlug = async (
-req:Request<{slug:Product["slug"]}>,
+req:Request<{slug:Product["slug"]},{minPrice:number,maxPrice:number}>,
 res:Response)=>{
 //verifcar categoria 
 const slug = req.params["slug"];     

@@ -8,7 +8,7 @@ router.get("/", (_req, res) => {
 });
 
 router.get("/categories",categoryControler.getCategories);
-router.get("/category/:slug",categoryControler.getCategoryBySlug);
-router.get("/category/:slug/products",productControler.getProductsByCategorySlug);
-router.get("/product/:slug",productControler.getProductsBySlug);
+router.get("/categories/:slug",categoryControler.getCategoryBySlug);
+router.get("/categories/:slug/products",productControler.getProductsByCategorySlug);
+router.get("/products/:slug",productControler.getProductsBySlug);
 export default router;
