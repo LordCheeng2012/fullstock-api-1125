@@ -14,4 +14,6 @@ router.get("/categories/:slug", categoryControler.getCategoryBySlug);
 router.get("/categories/:slug/products",productControler.getProductsByCategorySlug,);
 router.get("/products/:slug", productControler.getProductsBySlug);
 router.post("/cart/items", cartControler.createCartItem);
+router.patch("/cart/items/:id",cartControler.updateCartItem);
+router.delete("/cart/items/:id",cartControler.deleteCartItem);
 export default router;

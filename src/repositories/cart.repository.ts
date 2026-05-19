@@ -26,3 +26,7 @@ export async function findById(id: number): Promise<Cart | null> {
   const result :CartRow =  query.rows[0];
   return result !== undefined ? camelcaseKeys(result) as Cart : null;
 }
+
+export async function touch(id:number): Promise<void> {
+await db.query(`UPDATE carts SET update_at = NOW() WHERE id = $1`,[id]);  
+}
