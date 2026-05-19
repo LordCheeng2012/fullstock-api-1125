@@ -20,6 +20,72 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: cart_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cart_items (
+    id integer NOT NULL,
+    cart_id integer NOT NULL,
+    product_id integer NOT NULL,
+    quantity integer NOT NULL,
+    create_at timestamp without time zone DEFAULT now() NOT NULL,
+    update_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT cart_items_quantity_check CHECK ((quantity > 0))
+);
+
+
+--
+-- Name: cart_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.cart_items_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: cart_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.cart_items_id_seq OWNED BY public.cart_items.id;
+
+
+--
+-- Name: carts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.carts (
+    id integer NOT NULL,
+    create_at timestamp without time zone DEFAULT now() NOT NULL,
+    update_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: carts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.carts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: carts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.carts_id_seq OWNED BY public.carts.id;
+
+
+--
 -- Name: categories; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -104,6 +170,20 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: cart_items id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cart_items ALTER COLUMN id SET DEFAULT nextval('public.cart_items_id_seq'::regclass);
+
+
+--
+-- Name: carts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.carts ALTER COLUMN id SET DEFAULT nextval('public.carts_id_seq'::regclass);
+
+
+--
 -- Name: categories id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -115,6 +195,30 @@ ALTER TABLE ONLY public.categories ALTER COLUMN id SET DEFAULT nextval('public.c
 --
 
 ALTER TABLE ONLY public.products ALTER COLUMN id SET DEFAULT nextval('public.products_id_seq'::regclass);
+
+
+--
+-- Name: cart_items cart_items_cart_id_product_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cart_items
+    ADD CONSTRAINT cart_items_cart_id_product_id_unique UNIQUE (cart_id, product_id);
+
+
+--
+-- Name: cart_items cart_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cart_items
+    ADD CONSTRAINT cart_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: carts carts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.carts
+    ADD CONSTRAINT carts_pkey PRIMARY KEY (id);
 
 
 --
@@ -150,6 +254,22 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: cart_items cart_items_cart_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cart_items
+    ADD CONSTRAINT cart_items_cart_id_fkey FOREIGN KEY (cart_id) REFERENCES public.carts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: cart_items cart_items_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cart_items
+    ADD CONSTRAINT cart_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: products products_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -170,4 +290,6 @@ ALTER TABLE ONLY public.products
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('20260429044207'),
-    ('20260505001825');
+    ('20260505001825'),
+    ('20260507002417'),
+    ('20260517032115');

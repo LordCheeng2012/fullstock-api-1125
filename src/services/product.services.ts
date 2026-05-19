@@ -1,11 +1,12 @@
+import type { Filters } from "../controllers/product.controler.ts";
 import * as productRepository from "../repositories/products.repository.ts";
 import type { ProductRow,Product } from "../repositories/products.repository.ts";
 import { isNullOrUndefined } from "../utils/utils.ts";
 
 
-export const getProductsByCategoryId= async (slug:ProductRow["slug"]):
+export const getProductsByCategorySlug= async (slug:ProductRow["slug"],filters:Filters):
 Promise<Product[] | null>  =>{
-    return await  productRepository.getBySlug(slug);
+return await  productRepository.getBySlug(slug,filters);
 }
 
 export const getProductBySlug = async (slug:ProductRow["slug"]):

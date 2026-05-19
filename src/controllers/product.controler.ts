@@ -3,21 +3,36 @@ import type {Product} from "../repositories/products.repository.ts";
 import * as serviceCategory from "../services/category.services.ts";
 import type { Category } from "../repositories/category.repository.ts";
 import type { Request,Response } from "express";
-import { isNullOrUndefined } from "../utils/utils.ts";
+import { isNullOrUndefined, isValidPrice } from "../utils/utils.ts";
 import { ApiError } from "../lib/errors.ts";
 
+export interface Filters {
+  minPrice?: number;
+  maxPrice?: number;
+}
 export const getProductsByCategorySlug = async (
-req:Request<{slug:Product["slug"]},{minPrice:number,maxPrice:number}>,
+req:Request<
+{slug:Product["slug"]},
+unknown,
+unknown,
+{minPrice?:string,maxPrice?:string}>, //en ts estos parametros no siempre estaran asi que el ? lo indica
 res:Response)=>{
-//verifcar categoria 
-const slug = req.params["slug"];     
+
+// verificar inputs     
+const slug = req.params["slug"];
+const {minPrice,maxPrice}  = req.query;
+const filters:Filters = {};  
+
+if(isValidPrice(Number(minPrice))) filters.minPrice = Number(minPrice);
+if(isValidPrice(Number(maxPrice))) filters.maxPrice = Number(maxPrice);
 if(isNullOrUndefined(slug)) throw new ApiError(400,"la categoria es invalida");
 
+// verificar categoria 
 const existCategory : Category|null = await serviceCategory.getCategoryBySlug(slug);
-
 if(!existCategory) throw new ApiError(400,"No existe categoria");
 
-const ProductsFind : Product[]|null = await serviceProduct.getProductsByCategoryId(slug);
+// realizar consulta al servicio 
+const ProductsFind : Product[]|null = await serviceProduct.getProductsByCategorySlug(slug,filters);
 
 if(!ProductsFind) throw new ApiError(404,"No se encontraron productos");
 
