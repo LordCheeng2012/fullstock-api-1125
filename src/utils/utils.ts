@@ -1,4 +1,4 @@
-import type { itemProduct } from "../controllers/cart-item.controler.ts";
+import type { itemProduct } from "../controllers/cart-item.controller.ts";
 
 export type Pathparam = string | string[] | undefined;
 

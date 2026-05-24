@@ -5,22 +5,19 @@ import type { Category } from "../repositories/category.repository.ts";
 import type { Request,Response } from "express";
 import { isNullOrUndefined, isValidPrice } from "../utils/utils.ts";
 import { ApiError } from "../lib/errors.ts";
+import { slugParamSchema } from "../schemas/params.schemas.ts";
+import { getProductsQuerySchema } from "../schemas/product.schema.ts";
 
 export interface Filters {
   minPrice?: number;
   maxPrice?: number;
 }
-export const getProductsByCategorySlug = async (
-req:Request<
-{slug:Product["slug"]},
-unknown,
-unknown,
-{minPrice?:string,maxPrice?:string}>, //en ts estos parametros no siempre estaran asi que el ? lo indica
-res:Response)=>{
+export const getProductsByCategorySlug = async (req:Request, res:Response)=>{
+  //en ts estos parametros no siempre estaran asi que el ? lo indica
 
 // verificar inputs     
-const slug = req.params["slug"];
-const {minPrice,maxPrice}  = req.query;
+const {slug} = slugParamSchema.parse( req.params);
+const {minPrice,maxPrice}  = getProductsQuerySchema.parse(req.query);
 const filters:Filters = {};  
 
 if(isValidPrice(Number(minPrice))) filters.minPrice = Number(minPrice);
@@ -39,9 +36,9 @@ if(!ProductsFind) throw new ApiError(404,"No se encontraron productos");
 res.status(200).json({data:ProductsFind,status:"success"});
 }
 export const getProductsBySlug = async (
-req:Request<{slug:Product["slug"]}>,
+req:Request,
 res:Response)=>{
-const slug = req.params["slug"];    
+const {slug} =  slugParamSchema.parse(req.params);    
 const productFind : Product | null | undefined = await serviceProduct.getProductBySlug(slug);
 if (isNullOrUndefined(productFind)) throw new ApiError(404,"No se encontro el producto por el slug de : " + slug);  
 return res.status(200).json({data:productFind,status:"success"});

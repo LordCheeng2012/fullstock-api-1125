@@ -1,7 +1,8 @@
 import  camelcaseKeys from "camelcase-keys";
 import camelCaseKeys from "camelcase-keys";
 import * as db from "../db/index.ts";
-import type { QueryResult } from "pg";
+import type { PoolClient, QueryResult } from "pg";
+
 
 interface CartRow {
 id:number,
@@ -29,4 +30,8 @@ export async function findById(id: number): Promise<Cart | null> {
 
 export async function touch(id:number): Promise<void> {
 await db.query(`UPDATE carts SET update_at = NOW() WHERE id = $1`,[id]);  
+}
+
+export async function remove(cartId:number,client?: PoolClient): Promise<void>  {
+  await db.query(`DELETE FROM carts WHERE id = $1`,[cartId]);
 }

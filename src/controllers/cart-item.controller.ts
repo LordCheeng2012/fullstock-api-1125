@@ -3,61 +3,60 @@ import * as cartItemService from "../services/cart-item.service.ts";
 import type { Request,Response } from "express";
 import * as utils from "../utils/utils.ts";
 import { ApiError } from "../lib/errors.ts";
+import { createCartItemBodySchema,updateCartItemBodySchema } from "../schemas/cart-item.schema.ts";
+import { idParamSchema } from "../schemas/id-params.schema.ts";
 
-
-    export interface itemProduct {
+export interface itemProduct {
     productId:number,
     quantity:number
+}
+
+export const createCartItem = async (req:Request,res:Response)=>{
+
+    // validar inputs 
+    const isNotValidItemProduct = utils.isValidItemProduct(req.body) === false;
+
+    if(isNotValidItemProduct){
+        console.log("invalid payload -> ",req.body);
+        throw new ApiError(400,"datos invalidos, id de producto o cantidad son invalidos");
     }
 
-    export const createCartItem = async (
-    req:Request<object,undefined,itemProduct,undefined>,
-    res:Response)=>{
+    const request :itemProduct = createCartItemBodySchema.parse(req.body);
 
-        // validar inputs 
-        const isNotValidItemProduct = utils.isValidItemProduct(req.body) === false;
+    console.log("valid payload -> ",request);
+    let cartId = req.session.cartId;
+    //verificar session  cartId
 
-        if(isNotValidItemProduct){
-            console.log("invalid payload -> ",req.body);
-            throw new ApiError(400,"datos invalidos, id de producto o cantidad son invalidos");
-        }
-        const request :itemProduct = req.body;
-        console.log("valid payload -> ",request);
+    if (!(utils.isNullOrUndefined(cartId)) && typeof cartId === "number") {
+    const cart = await cartService.findById(cartId);
+    //verirficar existencia   
+    if(utils.isNullOrUndefined(cart)) {
+    delete req.session.cartId;
+    throw new ApiError(409,"El carrito de la sesión ya no existe")
+    }
+
+    cartId = cart.id;
+    //añadir al carrito 
         
-        let cartId = req.session.cartId;
-
-        //verificar session  cartId
-
-        if (!(utils.isNullOrUndefined(cartId)) && typeof cartId === "number") {
-        const cart = await cartService.findById(cartId);
-        //verirficar existencia   
-        if(utils.isNullOrUndefined(cart)) {
-            delete req.session.cartId;
-            throw new ApiError(409,"El carrito de la sesión ya no existe")
-        }
-
-        cartId = cart.id;
-        //añadir al carrito 
-        
-        }else{
+    }else{
             
-        //si no existe 
-        const cart = await cartService.create();
-        req.session.cartId = cart.id;
-        cartId = cart.id;
+    //si no existe 
+    const cart = await cartService.create();
+    req.session.cartId = cart.id;
+    cartId = cart.id;
 
-        }
+    }
 
-        const newItemAdd = await cartItemService.createCartItem(cartId,request); 
-        res.status(201).json({data:newItemAdd,status:"success"});
-    } 
-    export const updateCartItem = async (
+    const newItemAdd = await cartItemService.createCartItem(cartId,request); 
+    res.status(201).json({data:newItemAdd,status:"success"});
+} 
+export const updateCartItem = async (
         req:Request<{id:number},unknown,{quantity?:unknown}>,
         res:Response)=>{
 
             // capturamos parametros de solicitud 
-        const id = Number(req.params.id);
-        const quantity = Number(req.body.quantity);
+        const {id} = idParamSchema.parse(req.params);
+        const {quantity} = updateCartItemBodySchema.parse(req.body);
             
             // validamos el cart ID de la session 
         if(utils.isNullOrUndefined(req.session.cartId)){
@@ -92,14 +91,14 @@ import { ApiError } from "../lib/errors.ts";
          res.status(200).json({status:"success",data:Updateitem}) 
 
 
-    }
-    export const deleteCartItem = async (
-    req:Request<{id:number},unknown,unknown>,
+}
+export const deleteCartItem = async (
+    req:Request,
     res:Response
     ) =>{
 
         // capturamos parametros de solicitud 
-        const id = Number(req.params.id);
+        const {id} = idParamSchema.parse(req.params);
 
         // validamos el cart ID de la session 
         if(utils.isNullOrUndefined(req.session.cartId)){
@@ -130,4 +129,4 @@ import { ApiError } from "../lib/errors.ts";
 
         await cartItemService.deleteItem(cartId,id);
         res.status(204).send();
-    }
+}
