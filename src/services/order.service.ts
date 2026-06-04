@@ -5,6 +5,7 @@ import * as orderRepository from "../repositories/order.repository.ts";
 import type { Order } from "../repositories/order.repository.ts";
 import * as cartRepository from "../repositories/cart.repository.ts";
 import type { CreateOrderBody } from "../schemas/body.schemas.ts";
+import type { OrderItem } from "../repositories/order.repository.ts";
 // Definimos el tipo manualemente por ahora, lo reemplazaremos con Zod más adelante
 type CreateOrderBodyDefault = {
   email: string;
@@ -18,19 +19,29 @@ type CreateOrderBodyDefault = {
   zipCode: string;
   phone: string;
 };
+
+export type OrderWithItems = Order & { items: OrderItem[] };
+
 // este type fue remplazado por un objeto generico de zod, ver schemmas.ts
 export async function createOrder(
   cartId: number,
   shippingInfo: CreateOrderBody,
+  userId? : number
 ): Promise<Order> {
+  
   const cart = await cartService.getHydratedCart(cartId);
 
   if (cart === null) throw new Error("No se encontró carrito");
   if (cart.items.length === 0) throw new ApiError(400, "El carrito está vacío");
 
   const order = await db.withTransaction(async (client) => {
-    const orderData = { ...shippingInfo, total: cart.totalPrice };
+    const orderData = { 
+      ...shippingInfo,
+      userId:userId ?? null,
+      total: cart.totalPrice 
+    };
     const order = await orderRepository.createOrder(orderData, client);
+
 
     const items = cart.items.map((item) => ({
       orderId: order.id,
@@ -48,4 +59,12 @@ export async function createOrder(
   });
 
   return order;
+}
+
+export async function getOrderById(id: number): Promise<OrderWithItems | null> {
+  const order = await orderRepository.findById(id);
+  if (order === null) return null;
+ 
+  const items = await orderRepository.findItemsByOrderId(id);
+  return { ...order, items };
 }

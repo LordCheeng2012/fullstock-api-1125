@@ -11,7 +11,7 @@ export function proccessQueryParam(param: Pathparam): string {
         : param.length > 0 && !param
           ? param[0]
           : ""
-      : param || "";
+    : param || "";
 }
 export function isNullOrUndefined(value: any): value is null | undefined {
   return value === undefined || value === null;

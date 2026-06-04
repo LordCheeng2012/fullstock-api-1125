@@ -61,7 +61,8 @@ ALTER SEQUENCE public.cart_items_id_seq OWNED BY public.cart_items.id;
 CREATE TABLE public.carts (
     id integer NOT NULL,
     create_at timestamp without time zone DEFAULT now() NOT NULL,
-    update_at timestamp without time zone DEFAULT now() NOT NULL
+    update_at timestamp without time zone DEFAULT now() NOT NULL,
+    user_id integer
 );
 
 
@@ -179,6 +180,7 @@ CREATE TABLE public.orders (
     status text DEFAULT 'pending'::text NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    user_id integer,
     CONSTRAINT orders_total_check CHECK ((total >= 0))
 );
 
@@ -263,6 +265,39 @@ CREATE TABLE public.session (
 
 
 --
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    email text NOT NULL,
+    password text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
 -- Name: cart_items id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -305,6 +340,13 @@ ALTER TABLE ONLY public.products ALTER COLUMN id SET DEFAULT nextval('public.pro
 
 
 --
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
 -- Name: cart_items cart_items_cart_id_product_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -326,6 +368,14 @@ ALTER TABLE ONLY public.cart_items
 
 ALTER TABLE ONLY public.carts
     ADD CONSTRAINT carts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: carts carts_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.carts
+    ADD CONSTRAINT carts_user_id_key UNIQUE (user_id);
 
 
 --
@@ -385,6 +435,22 @@ ALTER TABLE ONLY public.session
 
 
 --
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: IDX_session_expire; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -408,6 +474,14 @@ ALTER TABLE ONLY public.cart_items
 
 
 --
+-- Name: carts carts_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.carts
+    ADD CONSTRAINT carts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: order_items order_items_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -421,6 +495,14 @@ ALTER TABLE ONLY public.order_items
 
 ALTER TABLE ONLY public.order_items
     ADD CONSTRAINT order_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE SET NULL;
+
+
+--
+-- Name: orders orders_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -449,4 +531,7 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260517032115'),
     ('20260523192730'),
     ('20260523201647'),
-    ('20260524011316');
+    ('20260524011316'),
+    ('20260530191427'),
+    ('20260531015128'),
+    ('20260602003750');

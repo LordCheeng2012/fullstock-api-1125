@@ -25,6 +25,7 @@
     "@eslint/js": "^10.0.1",
     "@tsconfig/node24": "^24.0.4",
     "@tsconfig/strictest": "^2.0.8",
+    "@types/bcrypt": "^6.0.0",
     "@types/connect-pg-simple": "^7.0.3",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
@@ -41,6 +42,7 @@
     "typescript-eslint": "^8.59.0"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "camelcase-keys": "^10.0.2",
     "connect-pg-simple": "^10.0.0",
     "dbmate": "^2.32.0",

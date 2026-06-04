@@ -5,6 +5,7 @@ import camelcaseKeys from "camelcase-keys";
 //types:::::::::::::::::
 interface OrderRow {
   id: number;
+  user_id: number | null;
   email: string;
   first_name: string;
   last_name: string;
@@ -46,10 +47,11 @@ export async function createOrder(
 ): Promise<Order> {
   const result = await db.query<QueryResult<OrderRow>>(
     `INSERT INTO orders
-      (email, first_name, last_name, company, address, city, country, region, zip_code, phone, total)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      (user_id,email, first_name, last_name, company, address, city, country, region, zip_code, phone, total)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,$12)
      RETURNING *`,
     [
+      data.userId,
       data.email,
       data.firstName,
       data.lastName,
@@ -93,4 +95,21 @@ export async function createOrderItems(
   }
  
   return rows;
+}
+export async function findById(id: number): Promise<Order | null> {
+  const result = await db.query<QueryResult<OrderRow>>(
+    "SELECT * FROM orders WHERE id = $1",
+    [id],
+  );
+ 
+  return result.rows[0] !== undefined ? camelcaseKeys(result.rows[0]) : null;
+}
+
+export async function findItemsByOrderId(orderId: number): Promise<OrderItem[]> {
+  const result = await db.query<QueryResult<OrderItemRow>>(
+    "SELECT * FROM order_items WHERE order_id = $1",
+    [orderId],
+  );
+ 
+  return camelcaseKeys(result.rows) as OrderItem[] ;
 }

@@ -1,7 +1,7 @@
 import camelcaseKeys from "camelcase-keys";
 import camelCaseKeys from "camelcase-keys";
 import * as db from "../db/index.ts";
-import type { QueryResult } from "pg";
+import type { PoolClient,QueryResult } from "pg";
 import type { itemProduct } from "../controllers/cart-item.controller.ts";
 
 //TYPES ::::::::::::::::::
@@ -20,6 +20,7 @@ interface CartItemWithProductRow extends CartItemRow {
   price: number;
   img_src: string;
 }
+
 export type CartItem = ReturnType<typeof camelcaseKeys<CartItemRow>>;
 type CreateCartItemData = Omit<CartItem, "id" | "createdAt" | "updatedAt">;
 export type CartItemWithProduct = ReturnType<typeof camelCaseKeys<CartItemWithProductRow>>;
@@ -44,19 +45,21 @@ export async function createItem(
 export async function findByCartdAndProduct(
   cart_id: number,
   itemProduct: itemProduct,
+  client ? :PoolClient
 ): Promise<null | CartItem> {
   const { productId } = itemProduct;
   const query: QueryResult<CartItemRow> = await db.query(
     `
     SELECT * FROM cart_items WHERE cart_id = $1 AND product_id = $2;`,
-    [cart_id, productId],
+    [cart_id, productId],client
   );
   return !query.rows[0] ? null : (camelCaseKeys(query.rows[0]) as CartItem);
 }
-export async function findById(id: number): Promise<null | CartItem> {
+export async function findById(id: number,client ? : PoolClient): Promise<null | CartItem> {
   const findItem: QueryResult<CartItemRow> = await db.query(
     `SELECT * FROM cart_items WHERE id = $1`,
     [id],
+    client
   );
   return !findItem.rows[0]
     ? null
@@ -66,10 +69,12 @@ export async function findById(id: number): Promise<null | CartItem> {
 export async function updatedQuantity(
   id: number,
   quantity: number,
+  client?:PoolClient
 ): Promise<null | CartItem> {
   const sentence: QueryResult<CartItemRow> = await db.query(
     `UPDATE cart_items SET quantity = $2, update_at = NOW() WHERE id = $1 RETURNING *`,
     [id, quantity],
+    client
   );
   return !sentence.rows[0]
     ? null
@@ -96,4 +101,29 @@ export async function getItemsWithProductByCartId(
   return !result.rows
     ? []
     : (camelCaseKeys(result.rows) as CartItemWithProduct[]);
+}
+
+export async function moveToCart(
+  id: number,
+  cartId: number,
+  client?: PoolClient,
+): Promise<void> {
+  await db.query(
+    "UPDATE cart_items SET cart_id = $1 WHERE id = $2",
+    [cartId, id],
+    client,
+  );
+}
+
+export async function getByCartId(
+  cartId: number,
+  client?: PoolClient,
+): Promise<CartItem[]> {
+  const result = await db.query<QueryResult<CartItemRow>>(
+    "SELECT * FROM cart_items WHERE cart_id = $1",
+    [cartId],
+    client,
+  );
+ 
+  return camelcaseKeys(result.rows);
 }
